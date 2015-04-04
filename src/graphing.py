@@ -21,3 +21,5 @@ def graph(member, save_dir):
     filename = dates[-1].strftime("%Y%m%d-%H%M%S-") + member.username + ".png"
 
     plt.savefig(os.path.join(save_dir, filename))
+
+    return os.path.join(save_dir, filename)

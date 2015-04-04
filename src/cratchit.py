@@ -3,7 +3,7 @@ import requests
 import urllib, random
 import shelve
 import getpass
-import graphing
+import graphing, reporting
 import os
 from datetime import datetime
 from model import TeamMember
@@ -111,7 +111,8 @@ def generate_reports():
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        graphing.graph(member, save_dir)
+        graph_file = graphing.graph(member, save_dir)
+        reporting.report(member, save_dir, graph_file)
 
     s['members'] = members
 
