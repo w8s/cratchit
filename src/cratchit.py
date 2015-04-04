@@ -107,7 +107,11 @@ def generate_reports():
                                   'activity' : activity,
                                   'commits'  : commits})
 
-        graphing.graph(member, s['config']['home'])
+        save_dir = os.path.join(s['config']['home'], "reports", member.username)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        graphing.graph(member, save_dir)
 
     s['members'] = members
 
