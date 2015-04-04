@@ -12,4 +12,11 @@ class TeamMember(object):
         return str('TeamMember(' + self.name + ", " +  self.username + ')')
 
     def add_overview_data(self, data_dict):
-        self.history.append(data_dict)
+        added = False
+        for data in self.history:
+            if data_dict['date'].date() == data['date'].date():
+                data = data_dict
+                added = True
+
+        if not added:
+            self.history.append(data_dict)
