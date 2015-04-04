@@ -1,5 +1,9 @@
+import xml.etree.ElementTree as ET
 import requests
 import urllib
+import shelve
+
+s = shelve.open('crachit.db')
 
 def enter_teammembers():
     print 'We are going to enter the names and usernames of your team members.'
@@ -32,11 +36,23 @@ def enter_global_data():
     password = raw_input('Password: ')
 
     token_url = url + "api.asp?cmd=logon&email=" + username + "&password=" + urllib.quote(password)
-    print token_url
+
+    print "\nSending a request to %s to get a token." % token_url
+
     token_request = requests.get(token_url)
-    print token_request.text
+
+    response = ET.fromstring(token_request.content)
+    token = response.find('token').text.strip()
+    print token
+    config_dict = { 'url'   : url,
+                    'token' : token}
+
+    s['config'] = config_dict
 
 
-enter_global_data()
+if 'config' not in s:
+    enter_global_data()
 
 # enter_teammembers()
+
+s.close()
