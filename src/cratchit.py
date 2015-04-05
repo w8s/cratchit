@@ -5,7 +5,7 @@ import shelve
 import getpass
 import graphing, reporting
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from model import TeamMember
 
 s = shelve.open('cratchit')
@@ -62,8 +62,11 @@ def enter_global_data():
     home_dir = os.path.expanduser("~")
     cratchit_dir = os.path.join(home_dir, "cratchit")
 
+    kiln_url = url + 'Kiln/Api/1.0/'
+
     config_dict = { 'url'   : url,
                     'token' : token,
+                    'kiln_url' : kiln_url,
                     'home'  : cratchit_dir}
 
     s['config'] = config_dict
@@ -91,15 +94,28 @@ def generate_reports():
     members = s['members']
 
     for member in members:
-        resolves = int(random.random() * 100)
-        activity = int(random.random() * 100)
-        commits = int(random.random() * 100)
         print "\nReport for %s:" % member
         # get case resolves
+
+        projects, project_cases = reporting.get_resolved_cases(s['config'], member, today, lastweek)
+
+        resolves = len(project_cases)
+
         print 'Resolves: %d' % resolves
-        # get case activity
+
+        activity_projects, activity_cases = reporting.get_case_activity(s['config'], member, today, lastweek)
+
+        activity = len(activity_cases)
+
         print 'Activity: %d' % activity
-        # get commits
+
+        member_repo_list, changeset_list = reporting.get_commits(s['config'], member, today, lastweek)
+
+        commits = 0
+        for item in changeset_list:
+            for key, value in item.iteritems():
+                commits += len(value)
+
         print 'Commits: %d' % commits
 
         member.add_overview_data({'date' : datetime.now(),
@@ -112,9 +128,13 @@ def generate_reports():
             os.makedirs(save_dir)
 
         graph_file = graphing.graph(member, save_dir)
-        reporting.report(member, save_dir, graph_file)
+        reporting.report(member, save_dir, graph_file, projects, project_cases, activity_projects, activity_cases, member_repo_list, changeset_list)
 
     s['members'] = members
+
+
+today = datetime.now()
+lastweek = today - timedelta(days=7)
 
 
 if 'config' not in s:
