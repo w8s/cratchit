@@ -17,8 +17,6 @@ def report(member, save_dir, graph_file, projects, project_cases, activity_proje
 
         f.write("# Weekly Activity Report for %s" % member.name + "\n\n")
 
-        # [f.write('%s\n%s\n\nResolves: %d\nActivity: %d\nCommits: %d\n\n' % (entry['date'].strftime("%m/%d/%Y"), '='*len(entry['date'].strftime("%m/%d/%Y")), entry['resolves'], entry['activity'], entry['commits'] )) for entry in member.history]
-
         # Write Resolves
         projects_and_cases = [[case for case in project_cases if case['project'] == project] for project in projects]
 
@@ -177,3 +175,55 @@ def get_commits(config, member, begin, end):
             project_changeset_list.append(project_changeset_dict)
 
     return member_repo_list, project_changeset_list
+
+
+def get_historical_counts(config, member, begin, end):
+    # Get resolved count
+    cases_command = 'cmd=search&q=resolved:\'' + end.strftime("%m/%d/%Y") + '..' + begin.strftime("%m/%d/%Y") + '\' resolvedBy:\''+ member.name +'\''
+
+    cases_url = config['url'] + 'api.asp?' + cases_command + '&token=' + config['token']
+
+    resolved_cases_request = requests.get(cases_url)
+    resolved_cases_xml = ET.fromstring(resolved_cases_request.content)
+
+    resolves = resolved_cases_xml[0].attrib['count']
+
+    # Get activity Count
+    activity_command = 'cmd=search&q=edited:\'' + end.strftime("%m/%d/%Y") + '..' + begin.strftime("%m/%d/%Y") + '\' EditedBy:\''+ member.name +'\''
+
+    activity_url = config['url'] + 'api.asp?' + activity_command + '&token=' + config['token']
+
+    activity_request = requests.get(activity_url)
+
+    activity_request_xml = ET.fromstring(activity_request.content)
+
+    activity = activity_request_xml[0].attrib['count']
+
+    # Get commit count
+    repo_url = config['kiln_url'] + "Project/?token=" + config['token']
+    repos = requests.get(repo_url)
+
+    repo_list = []
+
+    for project in repos.json():
+        for repogroup in project['repoGroups']:
+            for repo in repogroup['repos']:
+                repo_list.append((repo['ixRepo'], repo['sName']))
+
+    commits = 0
+
+    for ixRepo, repoName in repo_list:
+        commit_command = 'Search/Changesets?sQuery=edited:"' + end.strftime("%m/%d/%Y") + '..' + begin.strftime("%m/%d/%Y") + '" author:"' + member.username + '"&cHits=10000&ixRepo=' + str(ixRepo)
+
+        commit_url = config['kiln_url'] + commit_command + '&token=' + config['token']
+
+        changesets = requests.get(commit_url)
+
+        if len(changesets.json()['resultChangeset']) > 0:
+            commits += len(changesets.json()['resultChangeset'])
+
+    return {'date' : begin,
+            'resolves' : resolves,
+            'activity' : activity,
+            'commits'  : commits}
+
