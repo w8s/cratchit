@@ -13,6 +13,7 @@ members = s['members']
 for member in members:
 
     if len(member.history) < 12:
+        print member.name
         last_record_date = member.history[-1]['date']
         last_date = last_record_date - timedelta(days=7)
         one_week = last_date - timedelta(days=7)

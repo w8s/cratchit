@@ -124,10 +124,12 @@ def generate_reports():
                                   'commits'  : commits})
 
         save_dir = os.path.join(s['config']['home'], "reports", member.username)
+
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
         graph_file = graphing.graph(member, save_dir)
+
         reporting.report(member, save_dir, graph_file, projects, project_cases, activity_projects, activity_cases, member_repo_list, changeset_list)
 
     s['members'] = members

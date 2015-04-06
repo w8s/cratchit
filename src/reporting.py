@@ -34,7 +34,7 @@ def report(member, save_dir, graph_file, projects, project_cases, activity_proje
         # Write Activity
         projects_and_cases = [[case for case in activity_cases if case['project'] == project] for project in activity_projects]
 
-        header = "\n---\n## Case Activity (" + str(len(activity_cases)) + ")"
+        header = "\n---\n\n## Case Activity (" + str(len(activity_cases)) + ")"
         f.write(header)
 
         for project in projects_and_cases:
@@ -51,13 +51,14 @@ def report(member, save_dir, graph_file, projects, project_cases, activity_proje
             for key, value in item.iteritems():
                 commits += len(value)
 
-        header = "\n---\n## Commits (%d)" % commits
+        header = "\n---\n\n## Commits (%d)" % commits
         f.write(header)
 
         for repo in member_repo_list:
             changesets = []
             for item in changeset_list:
-                changesets = item[repo]
+                if repo in item.keys():
+                    changesets = item[repo]
 
             title = "%s (%d)" % (repo, len(changesets))
             f.write("\n\n### %s\n\n" % title)
